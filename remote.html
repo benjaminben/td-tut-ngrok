@@ -37,11 +37,15 @@
 		socket.onmessage = (event) => log.innerHTML = event.data 
 
 		trackpad.ontouchmove = (event) => handleTrackpad(event.targetTouches[0], event.target)
-		trackpad.ontouchstart = (event) => handleTrackpad(event.targetTouches[0], event.target)
+		trackpad.ontouchstart = (event) => {
+			event.preventDefault()
+			handleTrackpad(event.targetTouches[0], event.target)
+		}
 		trackpad.onmousedown = (event) => {
-			handleTrackpad(event.targetTouches[0])
-			trackpad.onmousemove = handleTrackpad(event, event.target)
-			window.mouseup = () => trackpad.onmousemove = null
+			handleTrackpad(event, event.target)
+			const handler = (e) => handleTrackpad(e, event.target)
+			window.addEventListener("mousemove", handler)
+			window.onmouseup = () => {window.removeEventListener("mousemove", handler)}
 		}
 
 		function formatUV(/*Array*/ uv) {
