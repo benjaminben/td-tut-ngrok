@@ -26,8 +26,12 @@
 	</div>
 	<script>
 	(() => {
+		// This code will execute on all modern browsers
+		// To support legacy browsers i.e IE <= 11, see
+		// https://babeljs.io/en/repl
+
 		/****************** Here ******************/
-		const url = "b366dee4.ngrok.io" // replace with ngrok url
+		const url = "localhost:9980" // replace with ngrok url
 		/****************************************/
 		const socket = new WebSocket(`ws://${url}`)
 		const trackpad = document.querySelector("#trackpad")
