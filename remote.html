@@ -5,57 +5,66 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
 		body { margin: 0; padding-bottom: 2em; overflow: hidden; }
-		#trackpad {
-			width: 100%; max-width: 600px; height: 100vw; max-height: 600px;
-			box-sizing: border-box; margin: 0 auto; background-color: rgba(200,200,200,1);
-			position: relative; display: flex; color: rgba(162,162,162,1); }
-		#trackpad:before {
-			content: attr(data-label); margin: auto; font-size: 12vw; font-family: monospace; }
 		#event_log { text-align: center; }
-		@media screen and (min-width: 600px) {
-			#trackpad:before { font-size: 5em; }
-		}
+		#ctrl_panel { display: flex; justify-content: space-between; align-items: center; }
+		#trackpad {
+		    width: 100%; max-width: 600px; height: 100vw; max-height: 600px;
+		    box-sizing: border-box; margin: 0 auto; background-color: #c8c8c8;
+		    position: relative; display: flex; color: #a2a2a2; }
+		#trackpad:before {
+		    content: attr(data-label); margin: auto; font-size: 12vw;
+		    font-family: monospace; }
+		@media screen and (min-width:600px) {
+		    #trackpad:before { font-size: 5em; } }
 	</style>
 </head>
 <body>
 	<div id="trackpad" data-label="TRACKPAD"></div>
-	<p id="event_log"></p>
+	<div id="ctrl_panel">
+		<button id="wipe">WIPE</button>
+		<span id="event_log"></span>
+	</div>
 	<script>
 	(() => {
-		const socket = new WebSocket("ws://6fada9ca.ngrok.io")
+		/****************** Here ******************/
+		const url = "b366dee4.ngrok.io" // replace with ngrok url
+		/****************************************/
+		const socket = new WebSocket(`ws://${url}`)
 		const trackpad = document.querySelector("#trackpad")
+		const wipe = document.querySelector("#wipe")
 		const log = document.querySelector("#event_log")
-		const handleTrackpad = (user, target) => {
-			const { u, v } = formatUV([
-				(user.clientX - target.offsetLeft) / target.clientWidth,
-				(user.clientY - target.offsetTop) / target.clientHeight,
-			])
-			const json = JSON.stringify({type: "player:trackpad", u, v})
-			socket.send(json)
-		}
 
+		/**** Post messages to the event log ****/
 		socket.onmessage = (event) => log.innerHTML = event.data 
 
-		trackpad.ontouchmove = (event) => handleTrackpad(event.targetTouches[0], event.target)
-		trackpad.ontouchstart = (event) => {
-			event.preventDefault()
-			handleTrackpad(event.targetTouches[0], event.target)
-		}
-		trackpad.onmousedown = (event) => {
-			handleTrackpad(event, event.target)
-			const handler = (e) => handleTrackpad(e, event.target)
+		/***** Trackpad Events *****/
+		trackpad.ontouchmove = (e) => handleTrackpad(e.targetTouches[0], e.target)
+		trackpad.ontouchstart = (e) => {
+			e.preventDefault()
+			handleTrackpad(e.targetTouches[0], e.target) }
+		trackpad.onmousedown = (e) => {
+			const handler = (e) => handleTrackpad(e, e.target)
+			window.onmouseup = () => window.removeEventListener("mousemove", handler)
 			window.addEventListener("mousemove", handler)
-			window.onmouseup = () => {window.removeEventListener("mousemove", handler)}
-		}
+			handleTrackpad(e, e.target) }
+		function handleTrackpad(user, target) {
+			const { u, v } = formatUV([
+				(user.clientX - target.offsetLeft) / target.clientWidth,
+				(user.clientY - target.offsetTop) / target.clientHeight, ])
+			const json = JSON.stringify({ type: "player:trackpad", u, v })
+			socket.send(json) }
 
-		function formatUV(/*Array*/ uv) {
+		/**** Control Events ****/
+		wipe.onclick = (e) => socket.send(JSON.stringify({ type: "ctrl:wipe" }))
+
+		/**** Helpers ****/
+		function formatUV(uv) {
 			// Helper function normalizes coordinates to -1<>1 and rounds for precision
-			// TD expects panel values to increase bottom --> up, so we'll invert our v here
+			// TouchDesigner expects panel values to increase from the bottom left,
+			// 	 whereas web events read from the top left, so we invert our v
 			return {
-				u: (uv[0] * 2 - 1).toFixed(2),
-				v: (uv[1] * -2 + 1).toFixed(2),
-			}
-		}
+				u: (uv[0] * 2 - 1).toFixed(2), // Round for precision
+				v: (uv[1] * -2 + 1).toFixed(2), } }
 	})()
 	</script>
 </body>
