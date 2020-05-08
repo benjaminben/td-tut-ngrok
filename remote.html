@@ -16,6 +16,8 @@
 		    font-family: monospace; }
 		@media screen and (min-width:600px) {
 		    #trackpad:before { font-size: 5em; } }
+		@media screen and (max-height:600px) {
+		    body { overflow: scroll; } }
 	</style>
 </head>
 <body>
@@ -52,9 +54,11 @@
 			window.onmouseup = () => window.removeEventListener("mousemove", handler)
 			handleTrackpad(e, e.target) }
 		function handleTrackpad(user, target) {
+			const { x, y, width, height, left, top } = target.getBoundingClientRect()
+			const { clientX, clientY } = user
 			const { u, v } = formatUV([
-				(user.clientX - target.offsetLeft) / target.clientWidth,
-				(user.clientY - target.offsetTop) / target.clientHeight, ])
+				(clientX - (x||left)) / width, // left / top supports legacy Edge
+				(clientY - (y||top)) / height, ])
 			const json = JSON.stringify({ type: "player:trackpad", u, v })
 			socket.send(json) }
 
