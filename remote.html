@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
 		body { margin: 0; padding-bottom: 2em; overflow: hidden; }
+		#ctrl_panel { display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; }
 		#event_log { text-align: center; }
-		#ctrl_panel { display: flex; justify-content: space-between; align-items: center; }
 		#trackpad {
 		    width: 100%; max-width: 600px; height: 100vw; max-height: 600px;
 		    box-sizing: border-box; margin: 0 auto; background-color: #c8c8c8;
@@ -21,12 +21,12 @@
 <body>
 	<div id="trackpad" data-label="TRACKPAD"></div>
 	<div id="ctrl_panel">
-		<button id="wipe">WIPE</button>
+		<button id="wipe">Wipe Canvas</button>
 		<span id="event_log"></span>
 	</div>
 	<script>
 	(() => {
-		// This code will execute on all modern browsers
+		// This code should execute on all modern browsers
 		// To support legacy browsers i.e IE <= 11, see
 		// https://babeljs.io/en/repl
 
@@ -48,8 +48,8 @@
 			handleTrackpad(e.targetTouches[0], e.target) }
 		trackpad.onmousedown = (e) => {
 			const handler = (e) => handleTrackpad(e, e.target)
-			window.onmouseup = () => window.removeEventListener("mousemove", handler)
 			window.addEventListener("mousemove", handler)
+			window.onmouseup = () => window.removeEventListener("mousemove", handler)
 			handleTrackpad(e, e.target) }
 		function handleTrackpad(user, target) {
 			const { u, v } = formatUV([
@@ -63,12 +63,11 @@
 
 		/**** Helpers ****/
 		function formatUV(uv) {
-			// Helper function normalizes coordinates to -1<>1 and rounds for precision
 			// TouchDesigner expects panel values to increase from the bottom left,
 			// 	 whereas web events read from the top left, so we invert our v
 			return {
-				u: (uv[0] * 2 - 1).toFixed(2), // Round for precision
-				v: (uv[1] * -2 + 1).toFixed(2), } }
+				u: uv[0].toFixed(2), // Round for precision
+				v: (1 - uv[1]).toFixed(2), } }
 	})()
 	</script>
 </body>
